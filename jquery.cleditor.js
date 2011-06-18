@@ -12,6 +12,57 @@
 // @output_file_name jquery.cleditor.min.js
 // ==/ClosureCompiler==
 
+var cli18n_en = {
+	showRichText: 'Show Rich Text',
+	selectionRequired: 'A selection is required when inserting a link.',
+	notSupported1: 'For security reasons, your browser does not support the ',
+	notsupported2: ' command. Try using the keyboard shortcut or context menu instead.',
+	execError1: 'Error executing the ',
+	execError2: ' command.',
+	submit: 'Submit',
+	enterUrl: 'Enter URL',
+	pasteContent: 'Paste your content here and click submit.',
+	paragraph: 'Paragraph',
+	header: 'Header',
+	//buttons
+	bold: '',
+	italic: '',
+	underline: '',
+	strikethrough: '',
+	subscript: '',
+	superscript: '',
+	font: '',
+	size: 'Font Size',
+	style: '',
+	color: 'Font Color',
+	highlight: 'Text Highlight Color',
+	removeformat: 'Remove Formatting',
+	bullets: '',
+	numbering: '',
+	outdent: '',
+	indent: '',
+	alignleft: 'Align Text Left',
+	center: '',
+	alignright: 'Align Text Right',
+	justify: '',
+	undo: '',
+	redo: '',
+	rule: 'Insert Horizontal Rule',
+	image: 'Insert Image',
+	link: 'Insert Hyperlink',
+	unlink: 'Remove Hyperlink',
+	cut: '',
+	copy: '',
+	paste: '',
+	pastetext: 'Paste as Text',
+	print: '',
+	source: 'Show Source'
+};
+
+if (!cli18n) {
+	var cli18n = cli18n_en;
+}
+	  
 (function($) {
 
   //==============
@@ -43,9 +94,9 @@
       sizes:        // sizes in the font size popup
                     "1,2,3,4,5,6,7",
       styles:       // styles in the style popup
-                    [["Paragraph", "<p>"], ["Header 1", "<h1>"], ["Header 2", "<h2>"],
-                    ["Header 3", "<h3>"],  ["Header 4","<h4>"],  ["Header 5","<h5>"],
-                    ["Header 6","<h6>"]],
+                    [[cli18n.paragraph, "<p>"], [cli18n.header+" 1", "<h1>"], [cli18n.header+" 2", "<h2>"],
+                    [cli18n.header+" 3", "<h3>"],  [cli18n.header+" 4","<h4>"],  [cli18n.header+" 5","<h5>"],
+                    [cli18n.header+" 6","<h6>"]],
       useCSS:       false, // use CSS to style HTML when possible (not supported in ie)
       docType:      // Document type contained within the editor
                     '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">',
@@ -62,38 +113,38 @@
     buttons: {
       // name,title,command,popupName (""=use name)
       init:
-      "bold,,|" +
-      "italic,,|" +
-      "underline,,|" +
-      "strikethrough,,|" +
-      "subscript,,|" +
-      "superscript,,|" +
-      "font,,fontname,|" +
-      "size,Font Size,fontsize,|" +
-      "style,,formatblock,|" +
-      "color,Font Color,forecolor,|" +
-      "highlight,Text Highlight Color,hilitecolor,color|" +
-      "removeformat,Remove Formatting,|" +
-      "bullets,,insertunorderedlist|" +
-      "numbering,,insertorderedlist|" +
-      "outdent,,|" +
-      "indent,,|" +
-      "alignleft,Align Text Left,justifyleft|" +
-      "center,,justifycenter|" +
-      "alignright,Align Text Right,justifyright|" +
-      "justify,,justifyfull|" +
-      "undo,,|" +
-      "redo,,|" +
-      "rule,Insert Horizontal Rule,inserthorizontalrule|" +
-      "image,Insert Image,insertimage,url|" +
-      "link,Insert Hyperlink,createlink,url|" +
-      "unlink,Remove Hyperlink,|" +
-      "cut,,|" +
-      "copy,,|" +
-      "paste,,|" +
-      "pastetext,Paste as Text,inserthtml,|" +
-      "print,,|" +
-      "source,Show Source"
+      "bold,"+cli18n.bold+",|" +
+      "italic,"+cli18n.italic+",|" +
+      "underline,"+cli18n.underline+",|" +
+      "strikethrough,"+cli18n.strikethrough+",|" +
+      "subscript,"+cli18n.subscript+",|" +
+      "superscript,"+cli18n.superscript+",|" +
+      "font,"+cli18n.font+",fontname,|" +
+      "size,"+cli18n.size+",fontsize,|" +
+      "style,"+cli18n.style+",formatblock,|" +
+      "color,"+cli18n.color+",forecolor,|" +
+      "highlight,"+cli18n.highlight+",hilitecolor,color|" +
+      "removeformat,"+cli18n.removeformat+",|" +
+      "bullets,"+cli18n.bullets+",insertunorderedlist|" +
+      "numbering,"+cli18n.numbering+",insertorderedlist|" +
+      "outdent,"+cli18n.outdent+",|" +
+      "indent,"+cli18n.indent+",|" +
+      "alignleft,"+cli18n.alignleft+",justifyleft|" +
+      "center,"+cli18n.center+",justifycenter|" +
+      "alignright,"+cli18n.alignright+",justifyright|" +
+      "justify,"+cli18n.justify+",justifyfull|" +
+      "undo,"+cli18n.undo+",|" +
+      "redo,"+cli18n.redo+",|" +
+      "rule,"+cli18n.rule+",inserthorizontalrule|" +
+      "image,"+cli18n.image+",insertimage,url|" +
+      "link,"+cli18n.link+",createlink,url|" +
+      "unlink,"+cli18n.unlink+",|" +
+      "cut,"+cli18n.cut+",|" +
+      "copy,"+cli18n.copy+",|" +
+      "paste,"+cli18n.paste+",|" +
+      "pastetext,"+cli18n.pastetext+",inserthtml,|" +
+      "print,"+cli18n.print+",|" +
+      "source,"+cli18n.source+""
     },
 
     // imagesPath - returns the path to the images folder
@@ -391,7 +442,7 @@
       else {
         editor.$frame.hide();
         editor.$area.show();
-        buttonDiv.title = "Show Rich Text";
+        buttonDiv.title = cli18n.showRichText;
       }
 
       // Enable or disable the toolbar buttons
@@ -412,7 +463,7 @@
 
           // Check for selection before showing the link url popup
           if (buttonName == "link" && selectedText(editor) === "") {
-            showMessage(editor, "A selection is required when inserting a link.", buttonDiv);
+            showMessage(editor, cli18n.selectionRequired, buttonDiv);
             return false;
           }
 
@@ -635,13 +686,13 @@
 
     // URL
     else if (popupName == "url") {
-      $popup.html('Enter URL:<br><input type=text value="http://" size=35><br><input type=button value="Submit">');
+      $popup.html(cli18n.enterUrl+':<br><input type=text value="http://" size=35><br><input type=button value="'+cli18n.submit+'">');
       popupTypeClass = PROMPT_CLASS;
     }
 
     // Paste as Text
     else if (popupName == "pastetext") {
-      $popup.html('Paste your content here and click submit.<br /><textarea cols=40 rows=3></textarea><br /><input type=button value=Submit>');
+      $popup.html(cli18n.pasteContent+'<br /><textarea cols=40 rows=3></textarea><br /><input type=button value='+cli18n.submit+'>');
       popupTypeClass = PROMPT_CLASS;
     }
 
@@ -718,12 +769,12 @@
       catch (err) { description = err.description; success = false; }
       if (!success) {
         if ("cutcopypaste".indexOf(command) > -1)
-          showMessage(editor, "For security reasons, your browser does not support the " +
-            command + " command. Try using the keyboard shortcut or context menu instead.",
+          showMessage(editor, cli18n.notSupported1 +
+            command + cli18n.notSupported2,
             button);
         else
           showMessage(editor,
-            (description ? description : "Error executing the " + command + " command."),
+            (description ? description : cli18n.execError1 + command + cli18n.execError2),
             button);
       }
     }
@@ -1130,3 +1181,5 @@
   }
 
 })(jQuery);
+
+
