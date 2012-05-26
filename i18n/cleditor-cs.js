@@ -1,0 +1,51 @@
+/* Czech localization for CLEditor. */
+
+var cli18n_cs = {
+	showRichText: 'Show Rich Text',
+	selectionRequired: 'Vyberte text pro vložení odkazu.',
+	notSupported1: 'Prohlížeč z bezpečnostních důvodů nepodporuje příkaz ',
+	notsupported2: ' . Zkuste použít klávesouvou zkratku nebo kontextové menu.',
+	execError1: 'Chyba při vykonávání příkazu ',
+	execError2: ' .',
+	submit: 'Odeslat',
+	enterUrl: 'Vložte webovou adresu',
+	pasteContent: 'Vložte sem text a klikněte na tlačítko odeslat.',
+	paragraph: 'Odstavec',
+	header: 'Nadpis',
+	//buttons
+	bold: 'Tučně',
+	italic: 'Kurzíva',
+	underline: 'Podtrženě',
+	strikethrough: 'Přesškrnutno',
+	subscript: 'Dolní index',
+	superscript: 'Horní index',
+	font: 'Písmo',
+	size: 'Velikost písma',
+	style: 'Styl',
+	color: 'Barva písma',
+	highlight: 'Barva zvýraznění textu',
+	removeformat: 'Ostranit formatování textu',
+	bullets: 'Puntíky',
+	numbering: 'Číslování',
+	outdent: 'Posunout vlevo',
+	indent: 'Posunout vpravo',
+	alignleft: 'Vyrovant text doleva',
+	center: 'Střed',
+	alignright: 'Vyronvat text doprava',
+	justify: 'Zarovnat text do bloku',
+	undo: 'Zpět',
+	redo: 'Vpřed',
+	rule: 'Vložit horizontální oddělovač',
+	image: 'Vložit obrázek',
+	link: 'Vložit odkaz',
+	unlink: 'Odstranit odkaz',
+	cut: 'Vyjmout',
+	copy: 'Kopírovat',
+	paste: 'Vložit',
+	pastetext: 'Vložit jako text',
+	print: 'Tisk',
+	source: 'Zobrazit HTML'
+	  };
+	var cli18n = cli18n_cs;  
+	
+	
