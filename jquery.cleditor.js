@@ -69,6 +69,7 @@ if (!cli18n) {
     defaultOptions: {
       width:        500, // width not including margins, borders or padding
       height:       250, // height not including margins, borders or padding
+      resizable:    false, // dynamicaly resizable
       controls:     // controls to add to the toolbar
                     "bold italic underline strikethrough subscript superscript | font size " +
                     "style | color highlight removeformat | bullets numbering | outdent " +
@@ -323,20 +324,42 @@ if (!cli18n) {
     $main.insertBefore($area)
       .append($area);
 
-    // Bind the document click event handler
-    if (!documentClickAssigned) {
-      $(document).click(function(e) {
-        // Dismiss all non-prompt popups
-        var $target = $(e.target);
-        if (!$target.add($target.parents()).is("." + PROMPT_CLASS))
-          hidePopups();
-      });
-      documentClickAssigned = true;
-    }
-
     // Bind the window resize event when the width or height is auto or %
     if (/auto|%/.test("" + options.width + options.height))
       $(window).resize(function() {refresh(editor);});
+
+    if (options.resizable) {
+        $main.resizable({minWidth: '350', minHeight: '150',
+            resize: function(event, ui) {
+                var $toolbar = editor.$toolbar;
+                $group = $toolbar.children("div:last");
+
+                // Resize the toolbar
+                var hgt = $group.offset().top + $group.outerHeight() - $toolbar.offset().top + 1;
+                $toolbar.height(hgt);
+
+            },
+            start: function(event, ui) {
+                       $main.sourceMode = sourceMode(editor);
+                       if ($main.sourceMode) {
+                           updateFrame(editor);
+                           editor.$area.hide();
+                       } else {
+                           updateTextArea(editor, true);
+                           editor.$frame.hide();
+                       }
+                   },
+            stop: function(event, ui) {
+                      if ($main.sourceMode) {
+                          editor.$area.show();
+                      } else {
+                          editor.$frame.show();
+                      }
+                      refresh(editor);
+                  }
+        });
+    }
+
 
     // Create the iframe and resize the controls
     refresh(editor);
@@ -889,10 +912,11 @@ if (!cli18n) {
     // Show the textarea for iPhone/iTouch/iPad or
     // the iframe when design mode is supported.
     if (iOS) editor.$area.show();
-    else $frame.show();
+    else if (!sourceMode(editor)) $frame.show();
 
-    // Wait for the layout to finish - shortcut for $(document).ready()
-    $(function() {
+    // Wait for the layout to finish. $(document).ready() does not work,
+    // but old good friend setTimeout() does.
+    setTimeout(function() {
 
       var $toolbar = editor.$toolbar,
           $group = $toolbar.children("div:last"),
@@ -903,7 +927,7 @@ if (!cli18n) {
       $toolbar.height(hgt);
 
       // Resize the iframe
-      hgt = (/%/.test("" + options.height) ? $main.height() : parseInt(options.height)) - hgt;
+      hgt = (/auto|%/.test("" + options.height) ? $main.height() : parseInt(options.height)) - hgt;
       $frame.width(wid).height(hgt);
 
       // Resize the textarea. IE6 textareas have a 1px top
@@ -915,8 +939,7 @@ if (!cli18n) {
 
       // Enable or disable the toolbar buttons
       refreshButtons(editor);
-
-    });
+    }, 0);
 
   }
 

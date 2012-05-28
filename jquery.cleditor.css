@@ -1,6 +1,7 @@
 .cleditorMain {border:1px solid #999; padding:0 1px 1px; background-color:white}
 .cleditorMain iframe {border:none; margin:0; padding:0}
 .cleditorMain textarea {border:none; margin:0; padding:0; overflow-y:scroll; font:10pt Arial,Verdana; resize:none; outline:none /* webkit grip focus */}
+.cleditorMain .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: -10px; bottom: -10px; } /* show se handle out of cleditor to not to mess with vertical scroll bar */
 .cleditorToolbar {background: url('images/toolbar.gif') repeat}
 .cleditorGroup {float:left; height:26px}
 .cleditorButton {float:left; width:24px; height:24px; margin:1px 0 1px 0; background: url('images/buttons.gif')}
