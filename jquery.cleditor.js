@@ -28,7 +28,7 @@
                     "bold italic underline strikethrough subscript superscript | font size " +
                     "style | color highlight removeformat | bullets numbering | outdent " +
                     "indent | alignleft center alignright justify | undo redo | " +
-                    "rule image link unlink | cut copy paste pastetext | print source",
+                    "rule image link unlink | print source",
       colors:       // colors in the color popup
                     "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
                     "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
@@ -88,10 +88,6 @@
       "image,Insert Image,insertimage,url|" +
       "link,Insert Hyperlink,createlink,url|" +
       "unlink,Remove Hyperlink,|" +
-      "cut,,|" +
-      "copy,,|" +
-      "paste,,|" +
-      "pastetext,Paste as Text,inserthtml,|" +
       "print,,|" +
       "source,Show Source"
     },
@@ -436,29 +432,6 @@
 
         }
 
-        // Paste as Text
-        else if (popupName == "pastetext") {
-
-          // Wire up the submit button click event handler
-          $popup.children(":button")
-            .unbind(CLICK)
-            .bind(CLICK, function() {
-
-              // Insert the unformatted text replacing new lines with break tags
-              var $textarea = $popup.find("textarea"),
-                text = $textarea.val().replace(/\n/g, "<br />");
-              if (text !== "")
-                execCommand(editor, data.command, text, null, data.button);
-
-              // Reset the text, hide the popup and set focus
-              $textarea.val("");
-              hidePopups();
-              focus(editor);
-
-            });
-
-        }
-
         // Show the popup if not already showing for this button
         if (buttonDiv !== $.data(popup, BUTTON)) {
           showPopup(editor, popup, buttonDiv);
@@ -639,12 +612,6 @@
       popupTypeClass = PROMPT_CLASS;
     }
 
-    // Paste as Text
-    else if (popupName == "pastetext") {
-      $popup.html('Paste your content here and click submit.<br /><textarea cols=40 rows=3></textarea><br /><input type=button value=Submit>');
-      popupTypeClass = PROMPT_CLASS;
-    }
-
     // Add the popup type class name
     if (!popupTypeClass && !popupContent)
       popupTypeClass = LIST_CLASS;
@@ -717,14 +684,9 @@
       try { success = editor.doc.execCommand(command, 0, value || null); }
       catch (err) { description = err.description; success = false; }
       if (!success) {
-        if ("cutcopypaste".indexOf(command) > -1)
-          showMessage(editor, "For security reasons, your browser does not support the " +
-            command + " command. Try using the keyboard shortcut or context menu instead.",
-            button);
-        else
-          showMessage(editor,
-            (description ? description : "Error executing the " + command + " command."),
-            button);
+        showMessage(editor,
+          (description ? description : "Error executing the " + command + " command."),
+          button);
       }
     }
 
