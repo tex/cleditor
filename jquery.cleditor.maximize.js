@@ -1,11 +1,19 @@
 //by Sergio Drago Sergio Drago <albsteen@gmail.com>
 
+var clmai18n_en = {
+    title: "Maximize"
+};
+
+if (!clmai18n) {
+	var clmai18n = clmai18n_en;
+}
+
 (function($) { 
 // Define the maximize button 
 $.cleditor.buttons.maximize = { 
 	name: "maximize", 
   	image: "maximize.gif",
-	title: "Maximize", 
+	title: clmai18n.title,
 	command: "", 
 	popupName: "", 
 	buttonClick: maximizeButtonClick 
