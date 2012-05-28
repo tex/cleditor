@@ -14,7 +14,7 @@ var cli18n_cs = {
 	bold: 'Tučně',
 	italic: 'Kurzíva',
 	underline: 'Podtrženě',
-	strikethrough: 'Přesškrnutno',
+	strikethrough: 'Přeškrtnuto',
 	subscript: 'Dolní index',
 	superscript: 'Horní index',
 	font: 'Písmo',
