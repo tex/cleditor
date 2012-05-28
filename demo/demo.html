@@ -2,8 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <link rel="stylesheet" href="../jquery.cleditor.css" />
+    <link rel="stylesheet" href="jquery-ui/jquery.ui.all.css" type="text/css" media="screen" charset="utf-8" />
 
     <script src='jquery.js' type='text/javascript' charset='utf-8'></script>
+    <script src='jquery-ui.js' type='text/javascript' charset='utf-8'></script>
     <script src='../i18n/cleditor-cs.js' type='text/javascript' charset='utf-8'></script>
     <script src='../i18n/cleditor.table-cs.js' type='text/javascript' charset='utf-8'></script>
     <script src='../jquery.cleditor.js' type='text/javascript' charset='utf-8'></script>
@@ -14,7 +16,7 @@
     <textarea class="ex" ></textarea>
     <script>
         (function($) {
-            $("textarea").cleditor();
+            $("textarea").cleditor({resizable: true});
         })(jQuery);
     </script>
 </body>
