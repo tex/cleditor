@@ -12,21 +12,32 @@
 // @output_file_name jquery.cleditor.table.min.js
 // ==/ClosureCompiler==
 
+var cltai18n_en = {
+    title: "Insert Table",
+    cols: "Cols",
+    rows: "Rows",
+    submit: "Submit"
+};
+
+if (!cltai18n) {
+	var cltai18n = cltai18n_en;
+}
+
 (function($) {
 
   // Define the table button
   $.cleditor.buttons.table = {
     name: "table",
     image: "table.gif",
-    title: "Insert Table",
+    title: cltai18n.title,
     command: "inserthtml",
     popupName: "table",
     popupClass: "cleditorPrompt",
     popupContent:         
       "<table cellpadding=0 cellspacing=0><tr>" +
-      "<td>Cols:<br><input type=text value=4 size=6></td>" +
-      "<td>Rows:<br><input type=text value=4 size=6></td>" +
-      "</tr></table><input type=button value=Submit>",
+      "<td>"+cltai18n.cols+":<br><input type=text value=4 size=6></td>" +
+      "<td>"+cltai18n.rows+":<br><input type=text value=4 size=6></td>" +
+      "</tr></table><input type=button value='"+cltai18n.submit+"'>",
     buttonClick: tableButtonClick
   };
 
