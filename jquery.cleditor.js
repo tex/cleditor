@@ -355,6 +355,8 @@ if (!cli18n) {
                       } else {
                           editor.$frame.show();
                       }
+                      editor.options.width='auto';
+                      editor.options.height='auto';
                       refresh(editor);
                   }
         });
