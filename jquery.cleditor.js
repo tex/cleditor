@@ -358,6 +358,7 @@ if (!cli18n) {
                       editor.options.width='auto';
                       editor.options.height='auto';
                       refresh(editor);
+                      focus(editor);
                   }
         });
     }
