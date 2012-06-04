@@ -247,7 +247,7 @@ if (!cli18n) {
       .data(CLEDITOR, editor)
       .blur(function() {
         // Update the iframe when the textarea loses focus
-        updateFrame(editor, true);
+        editor.updateFrame(true);
       });
 
     // Create the main container and append the textarea
@@ -340,12 +340,12 @@ if (!cli18n) {
 
             },
             start: function(event, ui) {
-                       $main.sourceMode = sourceMode(editor);
+                       $main.sourceMode = editor.sourceMode();
                        if ($main.sourceMode) {
-                           updateFrame(editor);
+                           editor.updateFrame();
                            editor.$area.hide();
                        } else {
-                           updateTextArea(editor, true);
+                           editor.updateTextArea(true);
                            editor.$frame.hide();
                        }
                    },
@@ -357,15 +357,15 @@ if (!cli18n) {
                       }
                       editor.options.width='auto';
                       editor.options.height='auto';
-                      refresh(editor);
-                      focus(editor);
+                      editor.refresh();
+                      editor.focus();
                   }
         });
     }
 
 
     // Create the iframe and resize the controls
-    refresh(editor);
+    this.refresh();
 
   };
 
@@ -373,42 +373,330 @@ if (!cli18n) {
   // Public Methods
   //===============
 
-  var fn = cleditor.prototype,
+  cleditor.prototype = {
 
-  // Expose the following private functions as methods on the cleditor object.
-  // The closure compiler will rename the private functions. However, the
-  // exposed method names on the cleditor object will remain fixed.
-  methods = [
-    ["clear", clear],
-    ["disable", disable],
-    ["execCommand", execCommand],
-    ["focus", focus],
-    ["hidePopups", hidePopups],
-    ["sourceMode", sourceMode, true],
-    ["refresh", refresh],
-    ["select", select],
-    ["selectedHTML", selectedHTML, true],
-    ["selectedText", selectedText, true],
-    ["showMessage", showMessage],
-    ["updateFrame", updateFrame],
-    ["updateTextArea", updateTextArea]
-  ];
+      // Clears the contents of the editor
+      clear: function() {
+                 this.$area.val("");
+                 this.updateFrame();
+             },
 
-  $.each(methods, function(idx, method) {
-    fn[method[0]] = function() {
-      var editor = this, args = [editor];
-      // using each here would cast booleans into objects!
-      for(var x = 0; x < arguments.length; x++) {args.push(arguments[x]);}
-      var result = method[1].apply(editor, args);
-      if (method[2]) return result;
-      return editor;
-    };
-  });
+      // Enables or disables the editor
+      disable: function(disabled) {
 
-  // change - shortcut for .bind("change", handler) or .trigger("change")
-  fn.change = function(handler) {
-    var $this = $(this);
-    return handler ? $this.bind(CHANGE, handler) : $this.trigger(CHANGE);
+                   // Update the textarea and save the state
+                   if (disabled) {
+                       this.$area.attr(DISABLED, DISABLED);
+                       this.disabled = true;
+                   }
+                   else {
+                       this.$area.removeAttr(DISABLED);
+                       delete this.disabled;
+                   }
+
+                   // Switch the iframe into design mode.
+                   // ie6 does not support designMode.
+                   // ie7 & ie8 do not properly support designMode="off".
+                   try {
+                       if (ie) this.doc.body.contentEditable = !disabled;
+                       else this.doc.designMode = !disabled ? "on" : "off";
+                   }
+                   // Firefox 1.5 throws an exception that can be ignored
+                   // when toggling designMode from off to on.
+                   catch (err) {}
+
+                   // Enable or disable the toolbar buttons
+                   refreshButtons(this);
+               },
+
+      // Executes a designMode command
+      execCommand: function(command, value, useCSS, button) {
+
+                       // Restore the current ie selection
+                       restoreRange(this);
+
+                       // Set the styling method
+                       if (!ie) {
+                           if (useCSS === undefined || useCSS === null)
+                               useCSS = this.options.useCSS;
+                           this.doc.execCommand("styleWithCSS", 0, useCSS.toString());
+                       }
+
+                       // Execute the command and check for error
+                       var success = true, description;
+                       if (ie && command.toLowerCase() == "inserthtml")
+                           getRange(this).pasteHTML(value);
+                       else {
+                           try { success = this.doc.execCommand(command, 0, value || null); }
+                           catch (err) { description = err.description; success = false; }
+                           if (!success) {
+                               showMessage(this,
+                                       (description ? description : cli18n.execError1 + command + cli18n.execError2),
+                                       button);
+                           }
+                       }
+
+                       // Enable the buttons
+                       refreshButtons(this);
+                       return success;
+
+                   },
+
+      // Sets focus to either the textarea or iframe
+      focus: function() {
+                 setTimeout($.proxy(function() {
+                     if (this.sourceMode()) this.$area.focus();
+                     else this.$frame[0].contentWindow.focus();
+                     refreshButtons(this);
+                 }, this), 0);
+             },
+
+      // Hides all popups
+      hidePopups: function() {
+                      $.each(popups, function(idx, popup) {
+                          $(popup)
+                          .hide()
+                          .unbind(CLICK)
+                          .removeData(BUTTON);
+                      });
+                  },
+
+      // Returns true if the textarea is showing
+      sourceMode: function() {
+          return this.$area.is(":visible");
+      },
+
+
+      // Creates the iframe and resizes the controls
+      refresh: function() {
+
+                   var $main = this.$main,
+                   options = this.options;
+
+                   // Remove the old iframe
+                   if (this.$frame) 
+                       this.$frame.remove();
+
+                   // Create a new iframe
+                   var $frame = this.$frame = $('<iframe frameborder="0" src="javascript:true;">')
+                       .hide()
+                       .appendTo($main);
+
+                   // Load the iframe document content
+                   var contentWindow = $frame[0].contentWindow,
+                       doc = this.doc = contentWindow.document,
+                       $doc = $(doc);
+
+                   doc.open();
+                   doc.write(
+                           options.docType +
+                           '<html>' +
+                           ((options.docCSSFile === '') ?
+                            '' :
+                            '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
+                           '<body style="' + options.bodyStyle + '"></body></html>'
+                           );
+                   doc.close();
+
+                   // Work around for bug in IE which causes the editor to lose
+                   // focus when clicking below the end of the document.
+                   if (ie)
+                       $doc.click(function() {this.focus();});
+
+                   // Load the content
+                   this.updateFrame();
+
+                   // Bind the ie specific iframe event handlers
+                   if (ie) {
+
+                       // Save the current user selection. This code is needed since IE will
+                       // reset the selection just after the beforedeactivate event and just
+                       // before the beforeactivate event.
+                       $doc.bind("beforedeactivate beforeactivate selectionchange keypress", function(e) {
+
+                           // Flag the editor as inactive
+                           if (e.type == "beforedeactivate")
+                           this.inactive = true;
+
+                       // Get rid of the bogus selection and flag the editor as active
+                           else if (e.type == "beforeactivate") {
+                               if (!this.inactive && this.range && this.range.length > 1)
+                           this.range.shift();
+                       delete this.inactive;
+                           }
+
+                       // Save the selection when the editor is active
+                           else if (!this.inactive) {
+                               if (!this.range) 
+                           this.range = [];
+                       this.range.unshift(getRange(this));
+
+                       // We only need the last 2 selections
+                       while (this.range.length > 2)
+                           this.range.pop();
+                           }
+
+                       });
+
+                       // Restore the text range when the iframe gains focus
+                       $frame.focus(function() {
+                           restoreRange(this);
+                       });
+
+                   }
+
+                   // Update the textarea when the iframe loses focus
+                   ($.browser.mozilla ? $doc : $(contentWindow)).blur(
+                           $.proxy(function() {
+                               this.updateTextArea(true);
+                           }, this));
+
+                   // Enable the toolbar buttons as the user types or clicks
+                   $doc.click(this.hidePopups)
+                       .bind("keyup mouseup", $.proxy(
+                                   function() {
+                                       refreshButtons(this);
+                                   }, this));
+
+                   // Show the textarea for iPhone/iTouch/iPad or
+                   // the iframe when design mode is supported.
+                   if (iOS) this.$area.show();
+                   else if (!this.sourceMode()) $frame.show();
+
+                   // Wait for the layout to finish. $(document).ready() does not work,
+                   // but old good friend setTimeout() does.
+                   setTimeout($.proxy(function() {
+
+                       var $toolbar = this.$toolbar, $group = $toolbar.children("div:last"), wid = $main.width();
+
+                       // Resize the toolbar
+                       var hgt = $group.offset().top + $group.outerHeight() - $toolbar.offset().top + 1;
+                       $toolbar.height(hgt);
+
+                       // Resize the iframe
+                       hgt = (/auto|%/.test("" + options.height) ? $main.height() : parseInt(options.height)) - hgt;
+                       $frame.width(wid).height(hgt);
+
+                       // Resize the textarea. IE6 textareas have a 1px top
+                       // & bottom margin that cannot be removed using css.
+                       this.$area.width(wid).height(ie6 ? hgt - 2 : hgt);
+
+                       // Switch the iframe into design mode if enabled
+                       this.disable(this.disabled);
+
+                       // Enable or disable the toolbar buttons
+                       refreshButtons(this);
+                   }, this), 0);
+
+               },
+
+      // Selects all the text in either the textarea or iframe
+      select: function() {
+                  setTimeout(function() {
+                      if (sourceMode(this)) this.$area.select();
+                      else this.execCommand("selectall");
+                  }, 0);
+              },
+
+      // Returns the current HTML selection or and empty string
+      selectedHTML: function() {
+                        restoreRange(this);
+                        var range = getRange(this);
+                        if (ie)
+                            return range.htmlText;
+                        var layer = $("<layer>")[0];
+                        layer.appendChild(range.cloneContents());
+                        var html = layer.innerHTML;
+                        layer = null;
+                        return html;
+                    },
+
+      // Returns the current text selection or and empty string
+      selectedText: function() {
+                        restoreRange(this);
+                        if (ie) return getRange(this).text;
+                        return getSelection(this).toString();
+                    },
+
+      // Alert replacement
+      showMessage: function(message, button) {
+                       var popup = createPopup("msg", this.options, MSG_CLASS);
+                       popup.innerHTML = message;
+                       showPopup(this, popup, button);
+                   },
+
+      // Updates the iframe with the textarea contents
+      updateFrame: function(checkForChange) {
+
+                       var code = this.$area.val(),
+                       options = this.options,
+                       updateFrameCallback = options.updateFrame,
+                       $body = $(this.doc.body);
+
+                       // Check for textarea change to avoid unnecessary firing
+                       // of potentially heavy updateFrame callbacks.
+                       if (updateFrameCallback) {
+                           var sum = checksum(code);
+                           if (checkForChange && this.areaChecksum == sum)
+                               return;
+                           this.areaChecksum = sum;
+                       }
+
+                       // Convert the textarea source code into iframe html
+                       var html = updateFrameCallback ? updateFrameCallback(code) : code;
+
+                       // Prevent script injection attacks by html encoding script tags
+                       html = html.replace(/<(?=\/?script)/ig, "&lt;");
+
+                       // Update the iframe checksum
+                       if (options.updateTextArea)
+                           this.frameChecksum = checksum(html);
+
+                       // Update the iframe and trigger the change event
+                       if (html != $body.html()) {
+                           $body.html(html);
+                           $(this).triggerHandler(CHANGE);
+                       }
+
+                   },
+
+      // Updates the textarea with the iframe contents
+      updateTextArea: function(checkForChange) {
+
+                          var html = $(this.doc.body).html(),
+                          options = this.options,
+                          updateTextAreaCallback = options.updateTextArea,
+                          $area = this.$area;
+
+                          // Check for iframe change to avoid unnecessary firing
+                          // of potentially heavy updateTextArea callbacks.
+                          if (updateTextAreaCallback) {
+                              var sum = checksum(html);
+                              if (checkForChange && this.frameChecksum == sum)
+                                  return;
+                              this.frameChecksum = sum;
+                          }
+
+                          // Convert the iframe html into textarea source code
+                          var code = updateTextAreaCallback ? updateTextAreaCallback(html) : html;
+
+                          // Update the textarea checksum
+                          if (options.updateFrame)
+                              this.areaChecksum = checksum(code);
+
+                          // Update the textarea and trigger the change event
+                          if (code != $area.val()) {
+                              $area.val(code);
+                              $(this).triggerHandler(CHANGE);
+                          }
+
+                      },
+
+      change: function(handler) {
+                  var $this = $(this);
+                  return handler ? $this.bind(CHANGE, handler) : $this.trigger(CHANGE);
+              },
+
   };
 
   //===============
@@ -447,7 +735,7 @@ if (!cli18n) {
     if (buttonName == "source") {
 
       // Show the iframe
-      if (sourceMode(editor)) {
+      if (editor.sourceMode()) {
         delete editor.range;
         editor.$area.hide();
         editor.$frame.show();
@@ -468,7 +756,7 @@ if (!cli18n) {
     }
 
     // Check for rich text mode
-    else if (!sourceMode(editor)) {
+    else if (!this.sourceMode()) {
 
       // Handle popups
       if (popupName) {
@@ -492,12 +780,12 @@ if (!cli18n) {
               var $text = $popup.find(":text"),
                 url = $.trim($text.val());
               if (url !== "")
-                execCommand(editor, data.command, url, null, data.button);
+                editor.execCommand(data.command, url, null, data.button);
 
               // Reset the text, hide the popup and set focus
               $text.val("http://");
-              hidePopups();
-              focus(editor);
+              editor.hidePopups();
+              editor.focus();
 
             });
 
@@ -519,13 +807,13 @@ if (!cli18n) {
         editor.$frame[0].contentWindow.print();
 
       // All other buttons
-      else if (!execCommand(editor, data.command, data.value, data.useCSS, buttonDiv))
+      else if (!editor.execCommand(data.command, data.value, data.useCSS, buttonDiv))
         return false;
 
     }
 
     // Focus the editor
-    focus(editor);
+    editor.focus();
 
   }
 
@@ -594,12 +882,12 @@ if (!cli18n) {
       return;
 
     // Execute the command
-    if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, buttonDiv))
+    if (data.command && !editor.execCommand(data.command, data.value, data.useCSS, buttonDiv))
       return false;
 
     // Hide the popup and focus the editor
-    hidePopups();
-    focus(editor);
+    editor.hidePopups();
+    editor.focus();
 
   }
 
@@ -616,12 +904,6 @@ if (!cli18n) {
       b = (b + a) % 65521;
     }
     return (b << 16) | a;
-  }
-
-  // clear - clears the contents of the editor
-  function clear(editor) {
-    editor.$area.val("");
-    updateFrame(editor);
   }
 
   // createPopup - creates a popup and adds it to the body
@@ -705,77 +987,6 @@ if (!cli18n) {
 
   }
 
-  // disable - enables or disables the editor
-  function disable(editor, disabled) {
-
-    // Update the textarea and save the state
-    if (disabled) {
-      editor.$area.attr(DISABLED, DISABLED);
-      editor.disabled = true;
-    }
-    else {
-      editor.$area.removeAttr(DISABLED);
-      delete editor.disabled;
-    }
-
-    // Switch the iframe into design mode.
-    // ie6 does not support designMode.
-    // ie7 & ie8 do not properly support designMode="off".
-    try {
-      if (ie) editor.doc.body.contentEditable = !disabled;
-      else editor.doc.designMode = !disabled ? "on" : "off";
-    }
-    // Firefox 1.5 throws an exception that can be ignored
-    // when toggling designMode from off to on.
-    catch (err) {}
-
-    // Enable or disable the toolbar buttons
-    refreshButtons(editor);
-
-  }
-
-  // execCommand - executes a designMode command
-  function execCommand(editor, command, value, useCSS, button) {
-
-    // Restore the current ie selection
-    restoreRange(editor);
-
-    // Set the styling method
-    if (!ie) {
-      if (useCSS === undefined || useCSS === null)
-        useCSS = editor.options.useCSS;
-      editor.doc.execCommand("styleWithCSS", 0, useCSS.toString());
-    }
-
-    // Execute the command and check for error
-    var success = true, description;
-    if (ie && command.toLowerCase() == "inserthtml")
-      getRange(editor).pasteHTML(value);
-    else {
-      try { success = editor.doc.execCommand(command, 0, value || null); }
-      catch (err) { description = err.description; success = false; }
-      if (!success) {
-        showMessage(editor,
-          (description ? description : cli18n.execError1 + command + cli18n.execError2),
-          button);
-      }
-    }
-
-    // Enable the buttons
-    refreshButtons(editor);
-    return success;
-
-  }
-
-  // focus - sets focus to either the textarea or iframe
-  function focus(editor) {
-    setTimeout(function() {
-      if (sourceMode(editor)) editor.$area.focus();
-      else editor.$frame[0].contentWindow.focus();
-      refreshButtons(editor);
-    }, 0);
-  }
-
   // getRange - gets the current text range object
   function getRange(editor) {
     if (ie) return getSelection(editor).createRange();
@@ -803,16 +1014,6 @@ if (!cli18n) {
     return "#" + (s.length == 6 ? s : c[1] + c[1] + c[2] + c[2] + c[3] + c[3]);
   }
 
-  // hidePopups - hides all popups
-  function hidePopups() {
-    $.each(popups, function(idx, popup) {
-      $(popup)
-        .hide()
-        .unbind(CLICK)
-        .removeData(BUTTON);
-    });
-  }
-
   // imagesPath - returns the path to the images folder
   function imagesPath() {
     var cssFile = "jquery.cleditor.css",
@@ -823,127 +1024,6 @@ if (!cli18n) {
   // imageUrl - Returns the css url string for a filemane
   function imageUrl(filename) {
     return "url(" + imagesPath() + filename + ")";
-  }
-
-  // refresh - creates the iframe and resizes the controls
-  function refresh(editor) {
-
-    var $main = editor.$main,
-      options = editor.options;
-
-    // Remove the old iframe
-    if (editor.$frame) 
-      editor.$frame.remove();
-
-    // Create a new iframe
-    var $frame = editor.$frame = $('<iframe frameborder="0" src="javascript:true;">')
-      .hide()
-      .appendTo($main);
-
-    // Load the iframe document content
-    var contentWindow = $frame[0].contentWindow,
-      doc = editor.doc = contentWindow.document,
-      $doc = $(doc);
-
-    doc.open();
-    doc.write(
-      options.docType +
-      '<html>' +
-      ((options.docCSSFile === '') ? '' : '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
-      '<body style="' + options.bodyStyle + '"></body></html>'
-    );
-    doc.close();
-
-    // Work around for bug in IE which causes the editor to lose
-    // focus when clicking below the end of the document.
-    if (ie)
-      $doc.click(function() {focus(editor);});
-
-    // Load the content
-    updateFrame(editor);
-
-    // Bind the ie specific iframe event handlers
-    if (ie) {
-
-      // Save the current user selection. This code is needed since IE will
-      // reset the selection just after the beforedeactivate event and just
-      // before the beforeactivate event.
-      $doc.bind("beforedeactivate beforeactivate selectionchange keypress", function(e) {
-        
-        // Flag the editor as inactive
-        if (e.type == "beforedeactivate")
-          editor.inactive = true;
-        
-        // Get rid of the bogus selection and flag the editor as active
-        else if (e.type == "beforeactivate") {
-          if (!editor.inactive && editor.range && editor.range.length > 1)
-            editor.range.shift();
-          delete editor.inactive;
-        }
-
-        // Save the selection when the editor is active
-        else if (!editor.inactive) {
-          if (!editor.range) 
-            editor.range = [];
-          editor.range.unshift(getRange(editor));
-
-          // We only need the last 2 selections
-          while (editor.range.length > 2)
-            editor.range.pop();
-        }
-
-      });
-
-      // Restore the text range when the iframe gains focus
-      $frame.focus(function() {
-        restoreRange(editor);
-      });
-
-    }
-
-    // Update the textarea when the iframe loses focus
-    ($.browser.mozilla ? $doc : $(contentWindow)).blur(function() {
-      updateTextArea(editor, true);
-    });
-
-    // Enable the toolbar buttons as the user types or clicks
-    $doc.click(hidePopups)
-      .bind("keyup mouseup", function() {
-        refreshButtons(editor);
-      });
-
-    // Show the textarea for iPhone/iTouch/iPad or
-    // the iframe when design mode is supported.
-    if (iOS) editor.$area.show();
-    else if (!sourceMode(editor)) $frame.show();
-
-    // Wait for the layout to finish. $(document).ready() does not work,
-    // but old good friend setTimeout() does.
-    setTimeout(function() {
-
-      var $toolbar = editor.$toolbar,
-          $group = $toolbar.children("div:last"),
-          wid = $main.width();
-
-      // Resize the toolbar
-      var hgt = $group.offset().top + $group.outerHeight() - $toolbar.offset().top + 1;
-      $toolbar.height(hgt);
-
-      // Resize the iframe
-      hgt = (/auto|%/.test("" + options.height) ? $main.height() : parseInt(options.height)) - hgt;
-      $frame.width(wid).height(hgt);
-
-      // Resize the textarea. IE6 textareas have a 1px top
-      // & bottom margin that cannot be removed using css.
-      editor.$area.width(wid).height(ie6 ? hgt - 2 : hgt);
-
-      // Switch the iframe into design mode if enabled
-      disable(editor, editor.disabled);
-
-      // Enable or disable the toolbar buttons
-      refreshButtons(editor);
-    }, 0);
-
   }
 
   // refreshButtons - enables or disables buttons based on availability
@@ -961,7 +1041,7 @@ if (!cli18n) {
     if (ie) queryObj = getRange(editor);
 
     // Loop through each button
-    var inSourceMode = sourceMode(editor);
+    var inSourceMode = editor.sourceMode();
     $.each(editor.$toolbar.find("." + BUTTON_CLASS), function(idx, elem) {
 
       var $elem = $(elem),
@@ -1018,41 +1098,6 @@ if (!cli18n) {
       editor.range[0].select();
   }
 
-  // select - selects all the text in either the textarea or iframe
-  function select(editor) {
-    setTimeout(function() {
-      if (sourceMode(editor)) editor.$area.select();
-      else execCommand(editor, "selectall");
-    }, 0);
-  }
-
-  // selectedHTML - returns the current HTML selection or and empty string
-  function selectedHTML(editor) {
-    restoreRange(editor);
-    var range = getRange(editor);
-    if (ie)
-      return range.htmlText;
-    var layer = $("<layer>")[0];
-    layer.appendChild(range.cloneContents());
-    var html = layer.innerHTML;
-    layer = null;
-    return html;
-  }
-
-  // selectedText - returns the current text selection or and empty string
-  function selectedText(editor) {
-    restoreRange(editor);
-    if (ie) return getRange(editor).text;
-    return getSelection(editor).toString();
-  }
-
-  // showMessage - alert replacement
-  function showMessage(editor, message, button) {
-    var popup = createPopup("msg", editor.options, MSG_CLASS);
-    popup.innerHTML = message;
-    showPopup(editor, popup, button);
-  }
-
   // showPopup - shows a popup
   function showPopup(editor, popup, button) {
 
@@ -1073,7 +1118,7 @@ if (!cli18n) {
     }
 
     // Position and show the popup
-    hidePopups();
+    editor.hidePopups();
     $popup.css({left: left, top: top})
       .show();
 
@@ -1087,78 +1132,6 @@ if (!cli18n) {
     setTimeout(function() {
       $popup.find(":text,textarea").eq(0).focus().select();
     }, 100);
-
-  }
-
-  // sourceMode - returns true if the textarea is showing
-  function sourceMode(editor) {
-    return editor.$area.is(":visible");
-  }
-
-  // updateFrame - updates the iframe with the textarea contents
-  function updateFrame(editor, checkForChange) {
-    
-    var code = editor.$area.val(),
-      options = editor.options,
-      updateFrameCallback = options.updateFrame,
-      $body = $(editor.doc.body);
-
-    // Check for textarea change to avoid unnecessary firing
-    // of potentially heavy updateFrame callbacks.
-    if (updateFrameCallback) {
-      var sum = checksum(code);
-      if (checkForChange && editor.areaChecksum == sum)
-        return;
-      editor.areaChecksum = sum;
-    }
-
-    // Convert the textarea source code into iframe html
-    var html = updateFrameCallback ? updateFrameCallback(code) : code;
-
-    // Prevent script injection attacks by html encoding script tags
-    html = html.replace(/<(?=\/?script)/ig, "&lt;");
-
-    // Update the iframe checksum
-    if (options.updateTextArea)
-      editor.frameChecksum = checksum(html);
-
-    // Update the iframe and trigger the change event
-    if (html != $body.html()) {
-      $body.html(html);
-      $(editor).triggerHandler(CHANGE);
-    }
-
-  }
-
-  // updateTextArea - updates the textarea with the iframe contents
-  function updateTextArea(editor, checkForChange) {
-
-    var html = $(editor.doc.body).html(),
-      options = editor.options,
-      updateTextAreaCallback = options.updateTextArea,
-      $area = editor.$area;
-
-    // Check for iframe change to avoid unnecessary firing
-    // of potentially heavy updateTextArea callbacks.
-    if (updateTextAreaCallback) {
-      var sum = checksum(html);
-      if (checkForChange && editor.frameChecksum == sum)
-        return;
-      editor.frameChecksum = sum;
-    }
-
-    // Convert the iframe html into textarea source code
-    var code = updateTextAreaCallback ? updateTextAreaCallback(html) : html;
-
-    // Update the textarea checksum
-    if (options.updateFrame)
-      editor.areaChecksum = checksum(code);
-
-    // Update the textarea and trigger the change event
-    if (code != $area.val()) {
-      $area.val(code);
-      $(editor).triggerHandler(CHANGE);
-    }
 
   }
 
