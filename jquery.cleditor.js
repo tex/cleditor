@@ -97,9 +97,7 @@ if (!cli18n) {
                     '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">',
       docCSSFile:   // CSS file used to style the document contained within the editor
                     "", 
-      bodyStyle:    // style to assign to document body contained within the editor
-                    "margin:4px; font:10pt Arial,Verdana; cursor:text",
-      plugin:       []
+      plugins:      []
     },
 
     // Define all usable toolbar buttons - the init string property is 
@@ -331,7 +329,8 @@ if (!cli18n) {
 
     if (options.resizable) {
         $main.resizable({minWidth: '350', minHeight: '150',
-            resize: function(event, ui) {
+            resize:
+            function(event, ui) {
                 var $toolbar = editor.$toolbar;
                 $group = $toolbar.children("div:last");
 
@@ -340,27 +339,24 @@ if (!cli18n) {
                 $toolbar.height(hgt);
 
             },
-            start: function(event, ui) {
-                       $main.sourceMode = editor.sourceMode();
-                       if ($main.sourceMode) {
-                           editor.updateFrame();
-                           editor.$area.hide();
-                       } else {
-                           editor.updateTextArea(true);
-                           editor.$frame.hide();
-                       }
-                   },
-            stop: function(event, ui) {
-                      if ($main.sourceMode) {
-                          editor.$area.show();
-                      } else {
-                          editor.$frame.show();
-                      }
-                      editor.options.width='auto';
-                      editor.options.height='auto';
-                      editor.refresh();
-                      editor.focus();
-                  }
+            start:
+            function(event, ui) {
+                $main.sourceMode = editor.sourceMode();
+                if ($main.sourceMode) {
+                    editor.updateFrame();
+                    editor.$area.hide();
+                } else {
+                    editor.updateTextArea(true);
+                    editor.$frame.hide();
+                }
+            },
+            stop:
+            function(event, ui) {
+                editor.options.width='auto';
+                editor.options.height='auto';
+                editor.refresh();
+                editor.focus();
+            }
         });
     }
 
@@ -498,9 +494,8 @@ if (!cli18n) {
                       options.docType +
                       '<html>' +
                       ((options.docCSSFile === '') ?
-                       '' :
-                       '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
-                      '<body style="' + options.bodyStyle + '"></body></html>'
+                       '' : '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
+                      '<body></body></html>'
                       );
               doc.close();
 
@@ -571,14 +566,13 @@ if (!cli18n) {
 
               // Initialization of plugins.
               var editor = this;
-              $.each(options.plugin,
+              $.each(options.plugins,
                       function(idx, setupPlugin) {
                           setupPlugin(editor);
                       });
 
-              // Wait for the layout to finish. $(document).ready() does not work,
-              // but old good friend setTimeout() does.
-              setTimeout($.proxy(function() {
+              // Wait for the layout to finish.
+              $(document).ready($.proxy(function() {
 
                   var $toolbar = this.$toolbar, $group = $toolbar.children("div:last"), wid = $main.width();
 
@@ -599,7 +593,7 @@ if (!cli18n) {
 
                   // Enable or disable the toolbar buttons
                   refreshButtons(this);
-              }, this), 0);
+              }, this));
 
           },
 
