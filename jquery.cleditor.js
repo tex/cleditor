@@ -327,39 +327,6 @@ if (!cli18n) {
     if (/auto|%/.test("" + options.width + options.height))
       $(window).resize(function() {refresh(editor);});
 
-    if (options.resizable) {
-        $main.resizable({minWidth: '350', minHeight: '150',
-            resize:
-            function(event, ui) {
-                var $toolbar = editor.$toolbar;
-                $group = $toolbar.children("div:last");
-
-                // Resize the toolbar
-                var hgt = $group.offset().top + $group.outerHeight() - $toolbar.offset().top + 1;
-                $toolbar.height(hgt);
-
-            },
-            start:
-            function(event, ui) {
-                $main.sourceMode = editor.sourceMode();
-                if ($main.sourceMode) {
-                    editor.updateFrame();
-                    editor.$area.hide();
-                } else {
-                    editor.updateTextArea(true);
-                    editor.$frame.hide();
-                }
-            },
-            stop:
-            function(event, ui) {
-                editor.options.width='auto';
-                editor.options.height='auto';
-                editor.refresh();
-                editor.focus();
-            }
-        });
-    }
-
     // Create the iframe and resize the controls
     this.refresh();
 
