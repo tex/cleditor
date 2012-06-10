@@ -1,7 +1,7 @@
 var climi18n_cs = {
-    float: "Obtékání textu kolem obrázku",
-    left: "Vpravo",
-    right: "Vlevo",
+    float: "Pozice obrázku při obtékání textem",
+    left: "Vlevo",
+    right: "Vpravo",
     none: "Žádné",
     width: "Šířka",
     keep_aspect_ratio: "Ponechat stejný poměr mezi stranami",
