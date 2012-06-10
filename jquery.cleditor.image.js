@@ -1,3 +1,23 @@
+var climi18n_en = {
+    float: "Float",
+    left: "Left",
+    right: "Right",
+    none: "None",
+    width: "Width",
+    keep_aspect_ratio: "Keep Aspect Ratio",
+    height: "Height",
+    margin: "Margin",
+    top: "Top",
+    bottom: "Bottom",
+    image_properties_title: "Edit Image Properties",
+    ok: "OK",
+    cancel: "Cancel",
+};
+
+if (!climi18n) {
+	var climi18n = climi18n_en;
+}
+
 (function($) {
 
     $.cleditor.defaultOptions.plugins.push(setupPlugin);
@@ -93,26 +113,26 @@
 
     function editImage($image, ratio) {
             var $di = $("<div><form>" +
-                    "<label>Float:</label>" +
+                    "<label>"+climi18n.float+":</label>" +
                         "<select id='float'>" +
-                            "<option value='left'>Left</option>" +
-                            "<option value='right'>Right</option>" +
-                            "<option value=''>None</option>" +
+                            "<option value='left'>"+climi18n.left+"</option>" +
+                            "<option value='right'>"+climi18n.right+"</option>" +
+                            "<option value=''>"+climi18n.none+"</option>" +
                         "</select><br>" +
-                    "<label>Width:</label>" +
+                    "<label>"+climi18n.width+":</label>" +
                         "<input id='width'><br>" +
-                    "<label>Keep Aspect Ratio:</label>" +
+                    "<label>"+climi18n.keep_aspect_ratio+":</label>" +
                         "<input type='checkbox' id='keep_ratio' checked><br>" +
-                    "<label>Height:</label>" +
+                    "<label>"+climi18n.height+":</label>" +
                         "<input id='height'><br>" +
-                    "<label>Margin</label><br>" +
-                    "<label>Left:</label>" +
+                    "<label>"+climi18n.margin+":</label><br>" +
+                    "<label>"+climi18n.left+":</label>" +
                         "<input id='margin-left'><br>" +
-                    "<label>Right:</label>" +
+                    "<label>"+climi18n.right+":</label>" +
                         "<input id='margin-right'><br>" +
-                    "<label>Top:</label>" +
+                    "<label>"+climi18n.top+":</label>" +
                         "<input id='margin-top'><br>" +
-                    "<label>Bottom:</label>" +
+                    "<label>"+climi18n.bottom+":</label>" +
                         "<input id='margin-bottom'><br>" +
                     "</form></div>");
 
@@ -155,9 +175,10 @@
 
             $di.dialog({
                 modal: true,
-                title: "Edit Image Properties",
-                buttons: {
-                    OK: function() {
+                title: climi18n.image_properties_title,
+                buttons: [
+                    {text: climi18n.ok,
+                     click: function() {
                             $image.css("float", $("#float", this).val());
                             $image.width($("#width", this).val());
                             $image.height($("#height", this).val());
@@ -167,11 +188,13 @@
                             $image.css("margin-bottom", $("#margin-bottom", this).val() + 'px');
 
                             $(this).dialog("close");
-                        },
-                    Cancel: function() {
+                        }
+                    },{
+                    text: climi18n.cancel,
+                    click: function() {
                             $(this).dialog("close");
                         }
-                }
+                    }]
             });
     }
 
