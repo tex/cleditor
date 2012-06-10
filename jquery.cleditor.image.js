@@ -124,16 +124,32 @@
             $("#margin-top", $di).val($image.css("margin-top").replace(/px/gi, ''));
             $("#margin-bottom", $di).val($image.css("margin-bottom").replace(/px/gi, ''));
 
-            $("#width", $di).bind("keyup", function() {
+            $("#width", $di).bind("change", function() {
                 that = $(this).parent();
                 if ($("#keep_ratio", that).is(":checked")) {
-                    $("#height", that).val($("#width", that).val()*ratio);
+                    var width = $("#width", that);
+                    var height = $("#height", that);
+                    if (width.val().indexOf("%") != -1) {
+                        height.val(width.val());
+                        return;
+                    }
+                    if (!isNaN(width.val() / ratio)) {
+                        height.val(width.val() / ratio);
+                    }
                 }
             });
-            $("#height", $di).bind("keyup", function() {
+            $("#height", $di).bind("change", function() {
                 that = $(this).parent();
                 if ($("#keep_ratio", that).is(":checked")) {
-                    $("#width", that).val($("#height", that).val()/ratio);
+                    var height = $("#height", that);
+                    var width = $("#width", that);
+                    if (height.val().indexOf("%") != -1) {
+                        width.val(height.val());
+                        return;
+                    }
+                    if (!isNaN(height.val() / ratio)) {
+                        width.val(height.val() / ratio);
+                    }
                 }
             });
 
