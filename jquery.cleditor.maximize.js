@@ -1,4 +1,5 @@
 //by Sergio Drago Sergio Drago <albsteen@gmail.com>
+//updated and fixed by Milan Svoboda <milan.svoboda@centrum.cz>
 
 var clmai18n_en = {
     title: "Maximize"
@@ -25,33 +26,41 @@ $.cleditor.defaultOptions.maximized = false;
 
 function maximizeButtonClick(e, data) {
 	var editor = data.editor;
+    var b = $("body");
+    var m = editor.$main;
 
 	if (editor.options.maximized == false) {
-        editor.options.originalWidth = editor.$main.width();
-		editor.options.originalHeight = editor.$main.height();
-		$("body").css({ overflow: "hidden" })
-		editor.$main.css({ position: "absolute", top: 0, left: 0,
-                           width: $(window).width() - 4,
-                           height: $(window).height() - 4 });
-		editor.$main.offset({ top: 0, left: 0 });
-		editor.$main.width($(window).width() - 4);
-		editor.options.width = $(window).width() - 4;
-		editor.$main.height($(window).height() - 4);
-		editor.options.height = $(window).height() - 4;
+        editor.options.orig = {
+            overflow: b.css("overflow"),
+            position: m.css("position"),
+            width: m.css("width"),
+            height: m.css("height"),
+            offset: m.offset()
+        };
+
+		b.css({ overflow: "hidden" })
+		m.css({ position: "absolute", top: 0, left: 0,
+                width: $(window).width() - 4,
+                height: $(window).height() - 4 });
+		m.width($(window).width() - 4);
+		m.height($(window).height() - 4);
+		m.offset({ top: 0, left: 0 });
+
 		editor.options.maximized = true;
 		editor.options.scrollto = 0
 	} else {
+        var orig = editor.options.orig;
 
-		$("body").css({ overflow: "auto" })
-		editor.$main.css({ position: "relative",
-                           width: editor.options.originalWidth,
-                           height: editor.options.originalHeight });
-		editor.$main.width(editor.options.originalWidth);
-		editor.options.width = editor.options.originalWidth;
-		editor.$main.height(editor.options.originalHeight);
-		editor.options.height = editor.options.originalHeight;
+		b.css({ overflow: orig.overflow })
+		m.css({ position: orig.position, top: orig.offset.top, left: orig.offset.left,
+                width: orig.width,
+                height: orig.height });
+		m.width(orig.width);
+		m.height(orig.height);
+		m.offset(orig.offset);
+ 
 		editor.options.maximized = false;
-		editor.options.scrollto = editor.$main.position().top
+		editor.options.scrollto = m.position().top
 	}
 
 	editor.updateTextArea();
