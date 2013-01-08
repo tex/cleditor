@@ -548,7 +548,7 @@ if (!cli18n) {
                   $toolbar.height(hgt);
 
                   // Resize the iframe
-                  hgt = (/auto|%/.test("" + options.height) ? $main.height() : parseInt(options.height)) - hgt;
+                  hgt = $main.height() - hgt;
                   $frame.width(wid).height(hgt);
 
                   // Resize the textarea. IE6 textareas have a 1px top
