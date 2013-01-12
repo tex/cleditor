@@ -4,11 +4,14 @@
 
     function setupPlugin(editor) {
 
-        if (!editor.options.resizable) {
+        if (editor.options.resizable === false) {
             return;
         }
 
-        editor.$main.resizable({minWidth: '350', minHeight: '150',
+        var handles = editor.options.resizable === true ?
+            "e, s, se" : editor.options.resizable;
+
+        editor.$main.resizable({minWidth: '350', minHeight: '150', handles: handles,
             resize:
             function(event, ui) {
                 var $toolbar = editor.$toolbar;
