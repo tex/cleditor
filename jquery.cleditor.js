@@ -325,7 +325,7 @@ if (!cli18n) {
 
     // Bind the window resize event when the width or height is auto or %
     if (/auto|%/.test("" + options.width + options.height))
-      $(window).resize(function() {refresh(editor);});
+      $(window).resize(function() {editor.refresh();});
 
     // Create the iframe and resize the controls
     this.refresh();
